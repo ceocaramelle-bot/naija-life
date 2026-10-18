@@ -4,6 +4,7 @@ import { Player } from './player.js';
 import { Controls } from './controls.js';
 import { EconomySystem } from './economy.js';
 import { HUD } from './hud.js';
+import { Minimap } from './minimap.js';
 
 export class Game {
     constructor() {
@@ -13,6 +14,7 @@ export class Game {
         this.hud = new HUD(this.economy);
         this.player = new Player(this.sceneManager.scene);
         this.controls = new Controls();
+        this.minimap = new Minimap(this.player);
 
         this.initLoading();
     }
@@ -55,7 +57,7 @@ export class Game {
             const delta = clock.getDelta();
 
             this.controls.update();
-            this.player.update(this.controls.inputVector, 0);
+            this.player.update(this.controls.inputVector, delta);
 
             // Camera follow logic
             const targetCamPos = new THREE.Vector3(
@@ -70,6 +72,7 @@ export class Game {
                 this.player.position.z
             );
 
+            this.minimap.update();
             this.sceneManager.render();
         };
 
