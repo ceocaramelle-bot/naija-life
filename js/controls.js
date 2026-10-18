@@ -2,12 +2,9 @@ export class Controls {
     constructor() {
         this.inputVector = { x: 0, z: 0 };
         this.cameraAngle = 0; 
-        this.pointerStartX = 0;
-        this.isDraggingCamera = false;
-        this.lookPointerId = null;
-
+        
         this.setupJoystick();
-        this.setupPointerLook();
+        this.setupTouchSwipe();
     }
 
     setupJoystick() {
@@ -15,7 +12,7 @@ export class Controls {
         const stick = document.getElementById('joystick-stick');
         if (!base || !stick) return;
 
-        let activePointerId = null;
+        let touchId = null;
 
         const handleMove = (clientX, clientY) => {
             const rect = base.getBoundingClientRect();
@@ -38,65 +35,70 @@ export class Controls {
             this.inputVector.z = dy / maxRadius;
         };
 
-        base.addEventListener('pointerdown', (e) => {
-            activePointerId = e.pointerId;
-            handleMove(e.clientX, e.clientY);
-            base.setPointerCapture(e.pointerId);
-        });
+        base.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            const touch = e.changedTouches[0];
+            touchId = touch.identifier;
+            handleMove(touch.clientX, touch.clientY);
+        }, { passive: false });
 
-        base.addEventListener('pointermove', (e) => {
-            if (e.pointerId === activePointerId) {
-                handleMove(e.clientX, e.clientY);
+        window.addEventListener('touchmove', (e) => {
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === touchId) {
+                    handleMove(touch.clientX, touch.clientY);
+                }
             }
-        });
+        }, { passive: true });
 
         const reset = (e) => {
-            if (e.pointerId === activePointerId) {
-                activePointerId = null;
-                stick.style.transform = 'translate(0px, 0px)';
-                this.inputVector.x = 0;
-                this.inputVector.z = 0;
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === touchId) {
+                    touchId = null;
+                    stick.style.transform = 'translate(0px, 0px)';
+                    this.inputVector.x = 0;
+                    this.inputVector.z = 0;
+                }
             }
         };
 
-        base.addEventListener('pointerup', reset);
-        base.addEventListener('pointercancel', reset);
+        window.addEventListener('touchend', reset, { passive: true });
+        window.addEventListener('touchcancel', reset, { passive: true });
     }
 
-    setupPointerLook() {
-        // Listen globally for drags anywhere on the screen outside the joystick & buttons
-        window.addEventListener('pointerdown', (e) => {
-            const joystickZone = document.getElementById('joystick-zone');
-            if (joystickZone && joystickZone.contains(e.target)) return;
-            if (e.target.tagName === 'BUTTON') return;
+    setupTouchSwipe() {
+        let lastX = 0;
+        let isSwiping = false;
 
-            if (this.lookPointerId === null) {
-                this.lookPointerId = e.pointerId;
-                this.pointerStartX = e.clientX;
-                this.isDraggingCamera = true;
+        document.addEventListener('touchstart', (e) => {
+            // Ignore touches on UI buttons or joystick
+            if (e.target.closest('#joystick-zone') || e.target.closest('button') || e.target.closest('#atm-modal')) {
+                return;
             }
-        });
-
-        window.addEventListener('pointermove', (e) => {
-            if (!this.isDraggingCamera || e.pointerId !== this.lookPointerId) return;
-
-            const deltaX = e.clientX - this.pointerStartX;
-            this.cameraAngle -= deltaX * 0.008; // Sensitivity multiplier
-            this.pointerStartX = e.clientX;
-        });
-
-        const endLook = (e) => {
-            if (e.pointerId === this.lookPointerId) {
-                this.lookPointerId = null;
-                this.isDraggingCamera = false;
+            if (e.touches.length > 0) {
+                lastX = e.touches[0].clientX;
+                isSwiping = true;
             }
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isSwiping || e.touches.length === 0) return;
+            
+            const currentX = e.touches[0].clientX;
+            const deltaX = currentX - lastX;
+            
+            this.cameraAngle -= deltaX * 0.008; // Orbit angle sensitivity
+            lastX = currentX;
+        }, { passive: true });
+
+        const endSwipe = () => {
+            isSwiping = false;
         };
 
-        window.addEventListener('pointerup', endLook);
-        window.addEventListener('pointercancel', endLook);
+        document.addEventListener('touchend', endSwipe, { passive: true });
+        document.addEventListener('touchcancel', endSwipe, { passive: true });
     }
 
     update() {
-        // Loop hook placeholder
+        // Keeps state ready for game loop
     }
-}
+                }
