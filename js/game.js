@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { GameScene } from './scene.js';
 import { Player } from './player.js';
 import { Controls } from './controls.js';
@@ -23,7 +24,7 @@ export class Game {
 
         let progress = 0;
         const interval = setInterval(() => {
-            progress += 20;
+            progress += 25;
             if (progressFill) progressFill.style.width = `${progress}%`;
             
             if (progress >= 100) {
@@ -32,13 +33,17 @@ export class Game {
                     startBtn.textContent = "Enter Abuja (Play)";
                     startBtn.disabled = false;
                     startBtn.addEventListener('click', () => {
-                        loadingScreen.style.opacity = '0';
-                        setTimeout(() => loadingScreen.remove(), 500);
+                        if (loadingScreen) {
+                            loadingScreen.style.opacity = '0';
+                            setTimeout(() => loadingScreen.style.display = 'none', 500);
+                        }
                         this.startLoop();
                     }, { once: true });
+                } else {
+                    this.startLoop();
                 }
             }
-        }, 150);
+        }, 100);
     }
 
     startLoop() {
@@ -47,14 +52,16 @@ export class Game {
         const animate = () => {
             requestAnimationFrame(animate);
 
+            const delta = clock.getDelta();
+
             this.controls.update();
             this.player.update(this.controls.inputVector, 0);
 
-            // Smooth camera follow
+            // Camera follow logic
             const targetCamPos = new THREE.Vector3(
                 this.player.position.x,
-                this.player.position.y + 4,
-                this.player.position.z + 8
+                this.player.position.y + 5,
+                this.player.position.z + 10
             );
             this.sceneManager.camera.position.lerp(targetCamPos, 0.1);
             this.sceneManager.camera.lookAt(
