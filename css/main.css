@@ -10,9 +10,8 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #0b0f19;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #ffffff;
+    background-color: #0f172a;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 #game-container {
@@ -24,78 +23,87 @@ body, html {
     z-index: 1;
 }
 
-#loading-screen {
+#hud-layer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #0b0f19 0%, #1a1f2c 100%);
-    z-index: 100;
+    pointer-events: none; /* Allows swiping through the overlay to rotate camera */
+    z-index: 10;
+}
+
+/* Re-enable touch interactions specifically for interactive UI buttons and joysticks */
+.hud-badge, .hud-btn, .action-btn, #joystick-zone, #atm-modal {
+    pointer-events: auto;
+}
+
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0f172a;
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 9999;
     transition: opacity 0.5s ease;
 }
 
 .loader-content {
     text-align: center;
+    color: #fff;
+    padding: 20px;
     width: 80%;
     max-width: 400px;
 }
 
 .loader-content h1 {
     font-size: 2.5rem;
-    font-weight: 800;
-    letter-spacing: 2px;
-    color: #008751;
+    color: #22c55e;
     margin-bottom: 8px;
-    text-shadow: 0 4px 12px rgba(0, 135, 81, 0.3);
+    letter-spacing: 2px;
 }
 
 .loader-content p {
-    font-size: 0.95rem;
     color: #94a3b8;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
 }
 
 .progress-bar {
     width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
+    height: 8px;
+    background: #1e293b;
+    border-radius: 4px;
     overflow: hidden;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 #progress-fill {
     width: 0%;
     height: 100%;
-    background: #008751;
-    transition: width 0.3s ease;
+    background: #22c55e;
+    transition: width 0.2s ease;
 }
 
 .primary-btn {
-    background: #008751;
-    color: white;
-    border: none;
-    padding: 14px 32px;
-    font-size: 1rem;
-    font-weight: 700;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 135, 81, 0.4);
-    transition: transform 0.1s ease, background 0.2s ease;
     width: 100%;
-}
-
-.primary-btn:active {
-    transform: scale(0.98);
+    background: #008751;
+    color: #fff;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 135, 81, 0.4);
 }
 
 .primary-btn:disabled {
     background: #334155;
     color: #64748b;
-    cursor: not-allowed;
     box-shadow: none;
 }
