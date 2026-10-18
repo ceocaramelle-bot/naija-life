@@ -6,6 +6,7 @@ import { EconomySystem } from './economy.js';
 import { HUD } from './hud.js';
 import { Minimap } from './minimap.js';
 import { WorldGenerator } from './world.js';
+import { InteractionSystem } from './interaction.js';
 
 export class Game {
     constructor() {
@@ -17,6 +18,7 @@ export class Game {
         this.player = new Player(this.sceneManager.scene);
         this.controls = new Controls();
         this.minimap = new Minimap(this.player);
+        this.interaction = new InteractionSystem(this.player, this.world, this.economy, this.hud);
 
         this.initLoading();
     }
@@ -60,6 +62,7 @@ export class Game {
 
             this.controls.update();
             this.player.update(this.controls.inputVector, delta);
+            this.interaction.update();
 
             // Camera follow logic
             const targetCamPos = new THREE.Vector3(
