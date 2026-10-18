@@ -64,12 +64,17 @@ export class Game {
             this.player.update(this.controls.inputVector, delta);
             this.interaction.update();
 
-            // Camera follow logic
+            // Camera Orbit Logic based on swipe angle
+            const camDistance = 12;
+            const camHeight = 6;
+            const angle = this.controls.cameraAngle;
+
             const targetCamPos = new THREE.Vector3(
-                this.player.position.x,
-                this.player.position.y + 6,
-                this.player.position.z + 12
+                this.player.position.x + Math.sin(angle) * camDistance,
+                this.player.position.y + camHeight,
+                this.player.position.z + Math.cos(angle) * camDistance
             );
+
             this.sceneManager.camera.position.lerp(targetCamPos, 0.1);
             this.sceneManager.camera.lookAt(
                 this.player.position.x,
@@ -83,4 +88,4 @@ export class Game {
 
         animate();
     }
-}
+                }
