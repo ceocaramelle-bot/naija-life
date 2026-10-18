@@ -1,91 +1,70 @@
 import * as THREE from 'three';
-import { CONFIG } from './config.js';
 
 export class GameScene {
     constructor(container) {
-        this.container = container;
+        this.container = container || document.getElementById('game-container');
+        
+        // Scene Setup
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87ceeb); // Daylight sky
-        this.scene.fog = new THREE.FogExp2(0x87ceeb, 0.005);
+        this.scene.background = new THREE.Color(0x38bdf8); // Sky blue Abuja daylight
+        this.scene.fog = new THREE.FogExp2(0x38bdf8, 0.015);
 
-        this.camera = new THREE.PerspectiveCamera(
-            60,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            1000
-        );
+        // Camera Setup
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+        this.camera.position.set(0, 6, 12);
 
+        // WebGL Renderer Setup
         this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.2;
 
+        // Clear container and append canvas
+        this.container.innerHTML = '';
         this.container.appendChild(this.renderer.domElement);
 
-        this.setupLighting();
-        this.setupEnvironment();
+        // Ensure canvas styles fill container perfectly
+        this.renderer.domElement.style.width = '100%';
+        this.renderer.domElement.style.height = '100%';
+        this.renderer.domElement.style.display = 'block';
 
+        // Lighting
+        this.setupLighting();
+
+        // Handle Window Resizing
         window.addEventListener('resize', () => this.onWindowResize());
     }
 
     setupLighting() {
-        const ambientLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.7);
-        ambientLight.position.set(0, 200, 0);
+        // Ambient Light for general brightness
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         this.scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
-        dirLight.position.set(100, 150, 50);
-        dirLight.castShadow = true;
-        dirLight.shadow.camera.top = 150;
-        dirLight.shadow.camera.bottom = -150;
-        dirLight.shadow.camera.left = -150;
-        dirLight.shadow.camera.right = 150;
-        dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 500;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        this.scene.add(dirLight);
-    }
-
-    setupEnvironment() {
-        // Ground Grid / District Plane
-        const groundGeo = new THREE.PlaneGeometry(CONFIG.WORLD.GROUND_SIZE, CONFIG.WORLD.GROUND_SIZE);
-        const groundMat = new THREE.MeshStandardMaterial({ 
-            color: 0x2a324b,
-            roughness: 0.8,
-            metalness: 0.2
-        });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        this.scene.add(ground);
-
-        // Grid helper representing Abuja district layout blocks
-        const grid = new THREE.GridHelper(CONFIG.WORLD.GROUND_SIZE, 50, 0x008751, 0x334155);
-        grid.position.y = 0.01;
-        this.scene.add(grid);
-
-        // Add placeholder Abuja skyline reference blocks (Central Business District blocks)
-        const boxGeo = new THREE.BoxGeometry(15, 40, 15);
-        const boxMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
-        
-        for (let i = -3; i <= 3; i++) {
-            if (i === 0) continue;
-            const building = new THREE.Mesh(boxGeo, boxMat);
-            building.position.set(i * 35, 20, -50);
-            building.castShadow = true;
-            building.receiveShadow = true;
-            this.scene.add(building);
-        }
+        // Directional Sun Light
+        const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.2);
+        sunLight.position.set(50, 80, 50);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 200;
+        const d = 40;
+        sunLight.shadow.camera.left = -d;
+        sunLight.shadow.camera.right = d;
+        sunLight.shadow.camera.top = d;
+        sunLight.shadow.camera.bottom = -d;
+        this.scene.add(sunLight);
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(width, height);
     }
 
     render() {
