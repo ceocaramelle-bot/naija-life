@@ -30,26 +30,28 @@ export class Game {
 
         let progress = 0;
         const interval = setInterval(() => {
-            progress += 25;
-            if (progressFill) progressFill.style.width = `${progress}%`;
+            progress += 35;
+            if (progressFill) progressFill.style.width = `${Math.min(progress, 100)}%`;
             
             if (progress >= 100) {
                 clearInterval(interval);
                 if (startBtn) {
                     startBtn.textContent = "Enter Abuja (Play)";
                     startBtn.disabled = false;
-                    startBtn.addEventListener('click', () => {
+                    
+                    // Direct event listener to hide loading screen and start game loop
+                    startBtn.onclick = () => {
                         if (loadingScreen) {
-                            loadingScreen.style.opacity = '0';
-                            setTimeout(() => loadingScreen.style.display = 'none', 500);
+                            loadingScreen.style.display = 'none';
                         }
                         this.startLoop();
-                    }, { once: true });
+                    };
                 } else {
+                    if (loadingScreen) loadingScreen.style.display = 'none';
                     this.startLoop();
                 }
             }
-        }, 100);
+        }, 80);
     }
 
     startLoop() {
@@ -64,7 +66,7 @@ export class Game {
             this.player.update(this.controls.inputVector, delta);
             this.interaction.update();
 
-            // Camera Orbit Logic based on swipe angle
+            // Camera Orbit & Follow Logic
             const camDistance = 12;
             const camHeight = 6;
             const angle = this.controls.cameraAngle;
@@ -88,4 +90,4 @@ export class Game {
 
         animate();
     }
-                }
+}
