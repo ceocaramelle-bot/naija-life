@@ -1,12 +1,13 @@
 export class Controls {
     constructor() {
         this.inputVector = { x: 0, z: 0 };
-        this.cameraAngle = 0; // Horizontal rotation angle in radians
-        this.touchStartX = 0;
+        this.cameraAngle = 0; 
+        this.pointerStartX = 0;
         this.isDraggingCamera = false;
+        this.lookPointerId = null;
 
         this.setupJoystick();
-        this.setupTouchLook();
+        this.setupPointerLook();
     }
 
     setupJoystick() {
@@ -14,7 +15,7 @@ export class Controls {
         const stick = document.getElementById('joystick-stick');
         if (!base || !stick) return;
 
-        let touchId = null;
+        let activePointerId = null;
 
         const handleMove = (clientX, clientY) => {
             const rect = base.getBoundingClientRect();
@@ -37,79 +38,65 @@ export class Controls {
             this.inputVector.z = dy / maxRadius;
         };
 
-        base.addEventListener('touchstart', (e) => {
-            const touch = e.changedTouches[0];
-            touchId = touch.identifier;
-            handleMove(touch.clientX, touch.clientY);
-        }, { passive: true });
+        base.addEventListener('pointerdown', (e) => {
+            activePointerId = e.pointerId;
+            handleMove(e.clientX, e.clientY);
+            base.setPointerCapture(e.pointerId);
+        });
 
-        window.addEventListener('touchmove', (e) => {
-            for (let touch of e.changedTouches) {
-                if (touch.identifier === touchId) {
-                    handleMove(touch.clientX, touch.clientY);
-                }
+        base.addEventListener('pointermove', (e) => {
+            if (e.pointerId === activePointerId) {
+                handleMove(e.clientX, e.clientY);
             }
-        }, { passive: true });
+        });
 
         const reset = (e) => {
-            for (let touch of e.changedTouches) {
-                if (touch.identifier === touchId) {
-                    touchId = null;
-                    stick.style.transform = 'translate(0px, 0px)';
-                    this.inputVector.x = 0;
-                    this.inputVector.z = 0;
-                }
+            if (e.pointerId === activePointerId) {
+                activePointerId = null;
+                stick.style.transform = 'translate(0px, 0px)';
+                this.inputVector.x = 0;
+                this.inputVector.z = 0;
             }
         };
 
-        window.addEventListener('touchend', reset, { passive: true });
-        window.addEventListener('touchcancel', reset, { passive: true });
+        base.addEventListener('pointerup', reset);
+        base.addEventListener('pointercancel', reset);
     }
 
-    setupTouchLook() {
-        let touchId = null;
-
-        window.addEventListener('touchstart', (e) => {
+    setupPointerLook() {
+        // Listen globally for drags anywhere on the screen outside the joystick & buttons
+        window.addEventListener('pointerdown', (e) => {
             const joystickZone = document.getElementById('joystick-zone');
-            for (let touch of e.changedTouches) {
-                // Ignore touches inside the joystick area or HUD buttons
-                if (joystickZone && joystickZone.contains(e.target)) continue;
-                if (e.target.tagName === 'BUTTON') continue;
+            if (joystickZone && joystickZone.contains(e.target)) return;
+            if (e.target.tagName === 'BUTTON') return;
 
-                if (touchId === null) {
-                    touchId = touch.identifier;
-                    this.touchStartX = touch.clientX;
-                    this.isDraggingCamera = true;
-                }
+            if (this.lookPointerId === null) {
+                this.lookPointerId = e.pointerId;
+                this.pointerStartX = e.clientX;
+                this.isDraggingCamera = true;
             }
-        }, { passive: true });
+        });
 
-        window.addEventListener('touchmove', (e) => {
-            if (!this.isDraggingCamera) return;
+        window.addEventListener('pointermove', (e) => {
+            if (!this.isDraggingCamera || e.pointerId !== this.lookPointerId) return;
 
-            for (let touch of e.changedTouches) {
-                if (touch.identifier === touchId) {
-                    const deltaX = touch.clientX - this.touchStartX;
-                    this.cameraAngle -= deltaX * 0.005; // Adjust sensitivity
-                    this.touchStartX = touch.clientX;
-                }
-            }
-        }, { passive: true });
+            const deltaX = e.clientX - this.pointerStartX;
+            this.cameraAngle -= deltaX * 0.008; // Sensitivity multiplier
+            this.pointerStartX = e.clientX;
+        });
 
-        const endTouch = (e) => {
-            for (let touch of e.changedTouches) {
-                if (touch.identifier === touchId) {
-                    touchId = null;
-                    this.isDraggingCamera = false;
-                }
+        const endLook = (e) => {
+            if (e.pointerId === this.lookPointerId) {
+                this.lookPointerId = null;
+                this.isDraggingCamera = false;
             }
         };
 
-        window.addEventListener('touchend', endTouch, { passive: true });
-        window.addEventListener('touchcancel', endTouch, { passive: true });
+        window.addEventListener('pointerup', endLook);
+        window.addEventListener('pointercancel', endLook);
     }
 
     update() {
-        // Keeps state ready for game loop
+        // Loop hook placeholder
     }
 }
