@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NAIJA LIFE — Abuja Open World</title>
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/hud.css">
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <!-- HUD Overlay -->
+    <div id="hud-layer">
+        <div class="hud-top-left">
+            <div id="player-balance" class="hud-badge">₦100,000.00</div>
+            <div id="game-clock" class="hud-badge">12:00 PM • WAT</div>
+        </div>
+        <div class="hud-top-right">
+            <button id="btn-minimap" class="hud-btn" aria-label="Minimap">🗺️</button>
+            <button id="btn-phone" class="hud-btn" aria-label="Phone">📱</button>
+            <button id="btn-settings" class="hud-btn" aria-label="Settings">⚙️</button>
+        </div>
+        
+        <!-- Mobile Virtual Controls -->
+        <div id="joystick-zone" class="joystick-container">
+            <div id="joystick-base">
+                <div id="joystick-stick"></div>
+            </div>
+        </div>
+
+        <div class="hud-bottom-right">
+            <button id="btn-action" class="action-btn">Interact</button>
+            <button id="btn-run" class="action-btn secondary">Run</button>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader-content">
+            <h1>NAIJA LIFE</h1>
+            <p>Your City. Your Story. Your Rules.</p>
+            <div class="progress-bar"><div id="progress-fill"></div></div>
+            <button id="btn-start" class="primary-btn" disabled>Loading Abuja...</button>
+        </div>
+    </div>
+
+    <!-- Import Map for Three.js ES Modules -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>
