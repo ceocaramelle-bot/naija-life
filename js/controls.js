@@ -1,79 +1,115 @@
-import * as THREE from 'three';
-
 export class Controls {
     constructor() {
-        this.inputVector = new THREE.Vector2(0, 0);
-        this.cameraAngle = 0;
-        this.keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
+        this.inputVector = { x: 0, z: 0 };
+        this.cameraAngle = 0; // Horizontal rotation angle in radians
+        this.touchStartX = 0;
+        this.isDraggingCamera = false;
 
-        this.setupKeyboard();
-        this.setupTouchJoystick();
+        this.setupJoystick();
+        this.setupTouchLook();
     }
 
-    setupKeyboard() {
-        window.addEventListener('keydown', (e) => {
-            if (this.keys.hasOwnProperty(e.key) || this.keys.hasOwnProperty(e.code)) {
-                this.keys[e.key] = true;
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (this.keys.hasOwnProperty(e.key) || this.keys.hasOwnProperty(e.code)) {
-                this.keys[e.key] = false;
-            }
-        });
-    }
-
-    setupTouchJoystick() {
-        const zone = document.getElementById('joystick-zone');
+    setupJoystick() {
+        const base = document.getElementById('joystick-base');
         const stick = document.getElementById('joystick-stick');
-        let active = false;
-        let startX = 0, startY = 0;
-        const maxDist = 40;
+        if (!base || !stick) return;
 
-        zone.addEventListener('touchstart', (e) => {
-            active = true;
-            const touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
+        let touchId = null;
+
+        const handleMove = (clientX, clientY) => {
+            const rect = base.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            let dx = clientX - centerX;
+            let dy = clientY - centerY;
+            const maxRadius = rect.width / 2;
+
+            const distance = Math.hypot(dx, dy);
+            if (distance > maxRadius) {
+                dx = (dx / distance) * maxRadius;
+                dy = (dy / distance) * maxRadius;
+            }
+
+            stick.style.transform = `translate(${dx}px, ${dy}px)`;
+
+            this.inputVector.x = dx / maxRadius;
+            this.inputVector.z = dy / maxRadius;
+        };
+
+        base.addEventListener('touchstart', (e) => {
+            const touch = e.changedTouches[0];
+            touchId = touch.identifier;
+            handleMove(touch.clientX, touch.clientY);
         }, { passive: true });
 
         window.addEventListener('touchmove', (e) => {
-            if (!active) return;
-            const touch = e.touches[0];
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-            const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxDist);
-            const angle = Math.atan2(dy, dx);
-
-            const moveX = Math.cos(angle) * dist;
-            const moveY = Math.sin(angle) * dist;
-
-            stick.style.transform = `translate(${moveX}px, ${moveY}px)`;
-            this.inputVector.set(moveX / maxDist, moveY / maxDist);
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === touchId) {
+                    handleMove(touch.clientX, touch.clientY);
+                }
+            }
         }, { passive: true });
 
-        window.addEventListener('touchend', () => {
-            if (!active) return;
-            active = false;
-            stick.style.transform = `translate(0px, 0px)`;
-            this.inputVector.set(0, 0);
-        });
+        const reset = (e) => {
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === touchId) {
+                    touchId = null;
+                    stick.style.transform = 'translate(0px, 0px)';
+                    this.inputVector.x = 0;
+                    this.inputVector.z = 0;
+                }
+            }
+        };
+
+        window.addEventListener('touchend', reset, { passive: true });
+        window.addEventListener('touchcancel', reset, { passive: true });
+    }
+
+    setupTouchLook() {
+        let touchId = null;
+
+        window.addEventListener('touchstart', (e) => {
+            const joystickZone = document.getElementById('joystick-zone');
+            for (let touch of e.changedTouches) {
+                // Ignore touches inside the joystick area or HUD buttons
+                if (joystickZone && joystickZone.contains(e.target)) continue;
+                if (e.target.tagName === 'BUTTON') continue;
+
+                if (touchId === null) {
+                    touchId = touch.identifier;
+                    this.touchStartX = touch.clientX;
+                    this.isDraggingCamera = true;
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!this.isDraggingCamera) return;
+
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === touchId) {
+                    const deltaX = touch.clientX - this.touchStartX;
+                    this.cameraAngle -= deltaX * 0.005; // Adjust sensitivity
+                    this.touchStartX = touch.clientX;
+                }
+            }
+        }, { passive: true });
+
+        const endTouch = (e) => {
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === touchId) {
+                    touchId = null;
+                    this.isDraggingCamera = false;
+                }
+            }
+        };
+
+        window.addEventListener('touchend', endTouch, { passive: true });
+        window.addEventListener('touchcancel', endTouch, { passive: true });
     }
 
     update() {
-        let x = 0;
-        let y = 0;
-
-        if (this.keys['w'] || this.keys['ArrowUp']) y -= 1;
-        if (this.keys['s'] || this.keys['ArrowDown']) y += 1;
-        if (this.keys['a'] || this.keys['ArrowLeft']) x -= 1;
-        if (this.keys['d'] || this.keys['ArrowRight']) x += 1;
-
-        if (x !== 0 || y !== 0) {
-            this.inputVector.set(x, y).normalize();
-        } else if (this.inputVector.length() === 0) {
-            // Keep touch input if active, else zero
-        }
+        // Keeps state ready for game loop
     }
 }
