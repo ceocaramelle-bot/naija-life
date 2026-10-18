@@ -5,6 +5,7 @@ import { Controls } from './controls.js';
 import { EconomySystem } from './economy.js';
 import { HUD } from './hud.js';
 import { Minimap } from './minimap.js';
+import { WorldGenerator } from './world.js';
 
 export class Game {
     constructor() {
@@ -12,6 +13,7 @@ export class Game {
         this.sceneManager = new GameScene(container);
         this.economy = new EconomySystem();
         this.hud = new HUD(this.economy);
+        this.world = new WorldGenerator(this.sceneManager.scene);
         this.player = new Player(this.sceneManager.scene);
         this.controls = new Controls();
         this.minimap = new Minimap(this.player);
@@ -62,8 +64,8 @@ export class Game {
             // Camera follow logic
             const targetCamPos = new THREE.Vector3(
                 this.player.position.x,
-                this.player.position.y + 5,
-                this.player.position.z + 10
+                this.player.position.y + 6,
+                this.player.position.z + 12
             );
             this.sceneManager.camera.position.lerp(targetCamPos, 0.1);
             this.sceneManager.camera.lookAt(
