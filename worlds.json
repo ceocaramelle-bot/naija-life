@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "worlds": [
+    { "id": "abuja-osm", "stateId": "FCT", "cityId": "abuja", "name": "Abuja (central district)", "status": "playable",
+      "dataFile": "data/districts/abuja-center.json",
+      "geoSource": "OpenStreetMap contributors (ODbL). Falls back to a hand-built test district if the data file is missing.", "capacity": 1 },
+    { "id": "uyo", "stateId": "AKS", "cityId": "uyo", "name": "Uyo, Akwa Ibom", "status": "in_development", "geoSource": "planned: OpenStreetMap (ODbL)", "capacity": 0 },
+    { "id": "lagos", "stateId": "LA", "cityId": "lagos", "name": "Lagos", "status": "planned", "geoSource": "planned", "capacity": 0 }
+  ]
+}
