@@ -107,4 +107,5 @@ function buildHandBuilt(scene) {
     interactables: LAYOUT.interactables, spawn: LAYOUT.spawn, mapData, graph: null,
     attribution: '', stats: null
   };
-      }
+}
+  
