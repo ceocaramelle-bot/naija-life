@@ -70,4 +70,3 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .errCard{max-width:520px}
 .errCard button{background:var(--gold);color:var(--ink);padding:10px 26px;border-radius:12px;font-weight:700}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-                                                           
