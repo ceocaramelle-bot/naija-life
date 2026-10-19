@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NAIJA LIFE - map importer</title>
+<style>
+  body{font-family:"Trebuchet MS",Roboto,sans-serif;background:#072b1e;color:#f7f5ef;margin:0;padding:16px;max-width:640px}
+  h1{font-size:22px;margin:0 0 4px} p,li{font-size:14px;line-height:1.45} .small{font-size:12px;opacity:.75}
+  label{display:block;margin-top:10px;font-size:13px;color:#f2b632}
+  input{width:100%;padding:10px;border-radius:8px;border:0;font-size:16px;margin-top:3px}
+  button{margin-top:14px;padding:12px 20px;border:0;border-radius:10px;background:#f2b632;color:#10201a;font-weight:700;font-size:16px}
+  button:disabled{opacity:.45}
+  #log{white-space:pre-wrap;font-size:13px;margin-top:12px;background:#0a3d2b;padding:10px;border-radius:8px;min-height:40px}
+  canvas{width:100%;max-width:420px;border:2px solid #f2b632;border-radius:8px;margin-top:10px;display:none}
+</style>
+</head>
+<body>
+<h1>NAIJA LIFE map importer</h1>
+<p>Fetches real road and building data from OpenStreetMap for one area and makes the district file the game loads.</p>
+<ol>
+  <li>Find the centre of the area. In Google Maps, press and hold on the spot, then copy the two numbers shown (latitude, longitude).</li>
+  <li>Enter them below and tap <b>Fetch</b>. Check the preview looks like the place.</li>
+  <li>Tap <b>Download</b>. Upload the file to your repository as <code>data/districts/abuja-center.json</code>.</li>
+</ol>
+<label>Latitude (the default is only an approximate point near central Abuja - verify it)</label>
+<input id="lat" inputmode="decimal" value="9.0602">
+<label>Longitude</label>
+<input id="lon" inputmode="decimal" value="7.4896">
+<label>Radius in metres (200 to 900; 500 recommended)</label>
+<input id="rad" inputmode="numeric" value="500">
+<label>District id (keep abuja-center unless you know why)</label>
+<input id="did" value="abuja-center">
+<button id="go">Fetch from OpenStreetMap</button>
+<button id="dl" disabled>Download district file</button>
+<div id="log">Waiting.</div>
+<canvas id="pv" width="420" height="420"></canvas>
+<p class="small">Data © OpenStreetMap contributors, licensed under the ODbL (openstreetmap.org/copyright). This page contacts the public Overpass API; please do not run it repeatedly.</p>
+<script type="module">
+import { overpassQuery, convertOverpass } from '../js/osmconvert.js';
+const $ = id => document.getElementById(id), log = t => $('log').textContent = t;
+let result = null;
+const SERVERS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+
+$('go').onclick = async () => {
+  const lat = parseFloat($('lat').value), lon = parseFloat($('lon').value), rad = Math.max(200, Math.min(900, parseInt($('rad').value, 10) || 500));
+  if (!(lat > 3 && lat < 15 && lon > 2 && lon < 15)) { log('Those numbers are not inside Nigeria. Latitude should be about 4 to 14 and longitude about 3 to 15.'); return; }
+  $('go').disabled = true; $('dl').disabled = true; result = null; log('Asking OpenStreetMap… this can take up to a minute.');
+  let data = null, lastErr = '';
+  for (const url of SERVERS) {
+    try {
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(overpassQuery(lat, lon, rad)) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      data = await res.json(); break;
+    } catch (e) { lastErr = url + ': ' + e.message; }
+  }
+  $('go').disabled = false;
+  if (!data) { log('Could not reach OpenStreetMap (' + lastErr + '). Check your internet and try again in a minute.'); return; }
+  result = convertOverpass(data, { id: $('did').value.trim() || 'abuja-center', name: 'Abuja (central district)', lat, lon, radius: rad });
+  const c = result.meta.counts;
+  let msg = 'Roads: ' + c.roads + '\nBuildings: ' + c.buildings + '\nParks: ' + c.parks + '\nPlaces: ' + c.pois + '\nTraffic signals and crossings: ' + c.signals + '\nBridges/flyovers: ' + c.bridges;
+  if (c.roads === 0) msg += '\n\nNo roads found. Check the coordinates (latitude first, then longitude).';
+  else { if (c.buildings > 1200) msg += '\n\nNote: the game draws the nearest 1200 buildings only.'; $('dl').disabled = false; msg += '\n\nSize: about ' + Math.round(JSON.stringify(result).length / 1024) + ' KB'; }
+  log(msg); preview(result);
+};
+
+$('dl').onclick = () => {
+  const blob = new Blob([JSON.stringify(result)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = result.meta.id + '.json'; a.click();
+};
+
+function preview(g) {
+  const c = $('pv'), x = c.getContext('2d'), s = c.width / (2 * g.meta.extent);
+  c.style.display = 'block'; x.fillStyle = '#2d4a2d'; x.fillRect(0, 0, c.width, c.height);
+  x.setTransform(s, 0, 0, s, c.width / 2, c.height / 2);
+  x.fillStyle = '#cfc7b8'; for (const b of g.buildings) { x.beginPath(); b.p.forEach((q, i) => i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1])); x.fill(); }
+  x.strokeStyle = '#222'; x.lineCap = 'round';
+  for (const r of g.roads) { x.lineWidth = r.br ? 6 : 4; x.strokeStyle = r.br ? '#d4642a' : '#222'; x.beginPath(); r.p.forEach((q, i) => i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1])); x.stroke(); }
+}
+</script>
+</body>
+</html>
