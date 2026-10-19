@@ -65,3 +65,4 @@ If the file is missing or unreadable, the game safely falls back to the hand-bui
 - Buildings are flat-coloured extrusions with estimated heights, no windows or interiors. Complex (multipolygon) buildings are skipped. The nearest 1200 buildings are drawn.
 - Money and saves are still stored on the device only (Phase 8 adds a server).
 - Terrain is flat; no elevation data yet.
+- 
