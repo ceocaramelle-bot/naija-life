@@ -261,3 +261,4 @@ function loop(now) {
 }
 
 init().catch(e => { console.error(e); showError('The game could not start', e.message); });
+    
