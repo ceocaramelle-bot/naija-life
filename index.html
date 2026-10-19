@@ -1,60 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NAIJA LIFE — Abuja Open World</title>
-    <link rel="stylesheet" href="./css/main.css">
-    <link rel="stylesheet" href="./css/hud.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a3d2b">
+<title>NAIJA LIFE</title>
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
 </head>
 <body>
-    <div id="game-container"></div>
+<canvas id="game"></canvas>
 
-    <!-- HUD Overlay -->
-    <div id="hud-layer">
-        <div class="hud-top-left">
-            <div id="player-balance" class="hud-badge">₦100,000.00</div>
-            <div id="game-clock" class="hud-badge">12:00 PM • WAT</div>
-        </div>
-        <div class="hud-top-right">
-            <button id="btn-minimap" class="hud-btn" aria-label="Minimap">🗺️</button>
-            <button id="btn-phone" class="hud-btn" aria-label="Phone">📱</button>
-            <button id="btn-settings" class="hud-btn" aria-label="Settings">⚙️</button>
-        </div>
-        
-        <!-- Mobile Virtual Controls -->
-        <div id="joystick-zone" class="joystick-container">
-            <div id="joystick-base">
-                <div id="joystick-stick"></div>
-            </div>
-        </div>
+<!-- HUD -->
+<div id="hud" hidden>
+  <div id="topLeft">
+    <div id="walletBox"><span class="lbl">Wallet</span><b id="walletAmt">₦0</b></div>
+    <div id="clockBox"><span id="clock">--:--</span> Abuja test district</div>
+  </div>
+  <canvas id="mini" width="170" height="170" aria-label="Minimap. Tap to open the full map."></canvas>
+  <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
+  <div id="lookZone"></div>
+  <div id="btns">
+    <button id="btnMenu" aria-label="Menu">☰</button>
+    <button id="btnMap" aria-label="Map">Map</button>
+    <button id="btnRun" aria-label="Run">Run</button>
+    <button id="btnAct" aria-label="Interact">Use</button>
+  </div>
+  <div id="prompt" hidden></div>
+</div>
+<div id="toast" hidden></div>
 
-        <div class="hud-bottom-right">
-            <button id="btn-action" class="action-btn">Interact</button>
-            <button id="btn-run" class="action-btn secondary">Run</button>
-        </div>
-    </div>
+<!-- Full map -->
+<div id="fullmap" hidden>
+  <canvas id="big"></canvas>
+  <button id="mapClose" class="closeBtn">Close map</button>
+  <div class="mapBtns"><button id="mapIn" class="closeBtn">+</button><button id="mapOut" class="closeBtn">−</button><button id="mapClear" class="closeBtn">Clear route</button></div>
+  <div class="mapNote">Drag to pan. Tap a spot to route along roads. Search and place filters are planned.</div>
+</div>
 
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-        <div class="loader-content">
-            <h1>NAIJA LIFE</h1>
-            <p>Your City. Your Story. Your Rules.</p>
-            <div class="progress-bar"><div id="progress-fill"></div></div>
-            <button id="btn-start" class="primary-btn" disabled>Loading Abuja...</button>
-        </div>
-    </div>
+<!-- Panel -->
+<div id="panel" hidden>
+  <div class="panelCard">
+    <div class="panelHead"><h2 id="panelTitle"></h2><button id="panelClose" class="closeBtn">Close</button></div>
+    <div id="panelBody"></div>
+  </div>
+</div>
 
-    <!-- Import Map for Three.js ES Modules -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
+<!-- Start -->
+<div id="start">
+  <div class="startCard">
+    <h1>NAIJA<br>LIFE</h1>
+    <p class="tag">Your City. Your Story. Your Rules.</p>
+    <button id="playBtn" disabled>Loading…</button>
+    <div id="loadMsg">Starting up…</div>
+    <ul id="worldList"></ul>
+    <p class="fine" id="attrib"></p>
+    <p class="fine">Phase 2 prototype. Single player. Progress is saved on this device only.</p>
+  </div>
+</div>
 
-    <script type="module" src="./js/main.js"></script>
+<div id="rotate"><div><span class="phoneIcon">⟳</span><p>Turn your phone sideways</p><small>NAIJA LIFE plays in landscape.</small></div></div>
+
+<div id="error" hidden>
+  <div class="errCard"><h2 id="errTitle">Something went wrong</h2><p id="errMsg"></p><button onclick="location.reload()">Reload</button></div>
+</div>
+
+<script>
+  // If the game module never starts (blocked CDN, no internet), say so instead of hanging.
+  setTimeout(function () {
+    if (!window.__naijaBooted) {
+      document.getElementById('errTitle').textContent = 'The game could not start';
+      document.getElementById('errMsg').textContent = 'The 3D engine did not load. Check your internet connection and that your browser is up to date, then reload.';
+      document.getElementById('error').hidden = false;
+    }
+  }, 12000);
+</script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
