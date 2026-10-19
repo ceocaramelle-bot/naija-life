@@ -52,4 +52,4 @@ export function drawMap(canvas, cx, cz, s, player, full, map, route, dest, inter
   g.fillStyle = '#ff3b30'; g.strokeStyle = '#fff'; g.lineWidth = 2;
   g.beginPath(); g.moveTo(0, -9); g.lineTo(6, 7); g.lineTo(0, 3); g.lineTo(-6, 7); g.closePath(); g.fill(); g.stroke(); g.restore();
   if (!full) { g.fillStyle = '#fff'; g.font = 'bold 12px sans-serif'; g.textAlign = 'center'; g.fillText('N', W / 2, 14); }
-}
+                                                                                                       }
